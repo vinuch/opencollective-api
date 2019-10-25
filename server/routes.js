@@ -14,7 +14,6 @@ import { get } from 'lodash';
 import * as connectedAccounts from './controllers/connectedAccounts';
 import getHomePage from './controllers/homepage';
 import uploadImage from './controllers/images';
-import { createPaymentMethod } from './controllers/paymentMethods';
 import * as users from './controllers/users';
 import stripeWebhook from './controllers/webhooks';
 import * as email from './controllers/services/email';
@@ -192,13 +191,6 @@ export default app => {
    * Users.
    */
   app.get('/users/exists', required('email'), users.exists); // Checks the existence of a user based on email.
-
-  /**
-   * Create a payment method.
-   *
-   *  Let's assume for now a paymentMethod is linked to a user.
-   */
-  app.post('/v1/payment-methods', createPaymentMethod);
 
   /**
    * Separate route for uploading images to S3
