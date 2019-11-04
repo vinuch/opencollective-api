@@ -103,7 +103,7 @@ const createChargeAndTransactions = async (hostStripeAccount, { order, hostStrip
   // Make sure data is available (breaking in some old tests)
   order.data = order.data || {};
 
-  let paymentIntent = order.data && order.data.paymentIntent;
+  let paymentIntent = order.data.paymentIntent;
   if (!paymentIntent) {
     const createPayload = {
       amount: order.totalAmount,
@@ -111,6 +111,7 @@ const createChargeAndTransactions = async (hostStripeAccount, { order, hostStrip
       customer: hostStripeCustomer.id,
       description: order.description,
       confirm: false,
+      confirmation_method: 'manual',
       metadata: {
         from: `${config.host.website}/${order.fromCollective.slug}`,
         to: `${config.host.website}/${order.collective.slug}`,
@@ -121,23 +122,23 @@ const createChargeAndTransactions = async (hostStripeAccount, { order, hostStrip
       createPayload.application_fee_amount = platformFee;
     }
     if (order.interval) {
-      payload.setup_future_usage = 'off_session';
+      createPayload.setup_future_usage = 'off_session';
     } else if (!order.processedAt && order.data.savePaymentMethod) {
-      payload.setup_future_usage = 'on_session';
+      createPayload.setup_future_usage = 'on_session';
     }
     paymentIntent = await stripe.paymentIntents.create(createPayload, {
       stripeAccount: hostStripeAccount.username,
     });
   }
 
-  const confirmPayload = { confirmation_method: 'manual' };
+  const confirmPayload = {};
   if (order.interval) {
     confirmPayload.setup_future_usage = 'off_session';
   } else if (!order.processedAt && order.data.savePaymentMethod) {
     confirmPayload.setup_future_usage = 'on_session';
   }
   paymentIntent = await stripe.paymentIntents.confirm(paymentIntent.id, confirmPayload, {
-    stripe_account: hostStripeAccount.username,
+    stripeAccount: hostStripeAccount.username,
   });
 
   if (paymentIntent.next_action) {
