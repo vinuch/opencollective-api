@@ -7,19 +7,36 @@
 // to use in loops and repeted tests.
 
 import uuid from 'uuid/v4';
-import { get } from 'lodash';
+import { get, sample } from 'lodash';
 import models from '../../server/models';
 import { types as CollectiveType } from '../../server/constants/collectives';
 import { randEmail, randUrl } from '../stores';
 
 export const randStr = (prefix = '') => `${prefix}${uuid().split('-')[0]}`;
 export const randAmount = (min = 100, max = 10000000) => Math.floor(Math.random() * max) + min;
+export const multiple = (fn, n, args) => Promise.all([...Array(n).keys()].map(() => fn(args)));
 
 /**
  * Creates a fake user. All params are optionals.
  */
 export const fakeUser = async userData => {
-  return models.User.createUserWithCollective({ email: randEmail(), name: randStr('User Name '), ...userData });
+  const user = await models.User.create({
+    email: randEmail(),
+    firstName: randStr('FirstName '),
+    lastName: randStr('LastName '),
+    ...userData,
+  });
+
+  const userCollective = await fakeCollective({
+    type: 'USER',
+    name: randStr('User Name'),
+    slug: randStr('user-'),
+    data: { UserId: user.id },
+  });
+
+  await user.update({ CollectiveId: userCollective.id });
+  user.collective = userCollective;
+  return user;
 };
 
 /**
@@ -93,14 +110,19 @@ export const fakeUpdate = async updateData => {
 /**
  * Creates a fake update. All params are optionals.
  */
-export const fakeExpense = async updateData => {
-  let CollectiveId = get(updateData, 'CollectiveId') || get(updateData, 'collective.id');
-  let UserId = get(updateData, 'UserId') || get(updateData, 'user.id');
+export const fakeExpense = async expenseData => {
+  let CollectiveId = get(expenseData, 'CollectiveId') || get(expenseData, 'collective.id');
+  let UserId = get(expenseData, 'UserId') || get(expenseData, 'user.id');
+  let FromCollectiveId = get(expenseData, 'FromCollectiveId') || get(expenseData, 'fromCollective.id');
   if (!CollectiveId) {
     CollectiveId = (await fakeCollective()).id;
   }
   if (!UserId) {
     UserId = (await fakeUser()).id;
+  }
+
+  if (!FromCollectiveId) {
+    FromCollectiveId = (await models.User.findByPk(UserId)).CollectiveId;
   }
 
   return models.Update.create({
@@ -110,7 +132,8 @@ export const fakeExpense = async updateData => {
     category: 'Engineering',
     description: randStr('Test expense '),
     payoutMethod: 'other',
-    ...updateData,
+    ...expenseData,
+    FromCollectiveId,
     CollectiveId,
     UserId,
   });
@@ -146,5 +169,28 @@ export const fakeComment = async commentData => {
     CreatedByUserId,
     ExpenseId,
     ConversationId,
+  });
+};
+
+/**
+ * Creates a fake tier. All params are optionals.
+ */
+export const fakeTier = async (tierData = {}) => {
+  const name = randStr('tier');
+  const interval = sample(['month', 'year']);
+  const currency = sample(['USD', 'EUR']);
+  const amount = tierData.amount || randAmount(1, 100) * 100;
+  const description = `$${amount / 100}/${interval}`;
+
+  return models.Tier.create({
+    name,
+    type: 'TIER',
+    slug: name,
+    description,
+    amount,
+    interval,
+    currency,
+    maxQuantity: randAmount(),
+    ...tierData,
   });
 };
