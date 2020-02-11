@@ -15,6 +15,9 @@ import whiteListDomains from './whiteListDomains';
 import { md5 } from './utils';
 
 const debug = debugLib('email');
+const debugData = debugLib('data');
+const debugText = debugLib('text');
+const debugHtml = debugLib('html');
 
 export const getMailer = () => {
   if (config.maildev.client) {
@@ -41,11 +44,6 @@ const render = (template, data) => {
   delete data.config;
   data.config = { host: config.host };
 
-  // sets paypalEmail for purpose of email templates
-  if (data.user) {
-    data.user.paypalEmail = data.user.paypalEmail || data.user.email;
-  }
-
   if (templates[`${template}.text`]) {
     text = templates[`${template}.text`](data);
   }
@@ -53,7 +51,7 @@ const render = (template, data) => {
 
   // When in development mode, we log the data used to compile the template
   // (useful to get login token without sending an email)
-  debugLib('data')(`Rendering ${template} with data`, data);
+  debugData(`Rendering ${template} with data`, data);
 
   return { text, html };
 };
@@ -190,8 +188,8 @@ const sendMessage = (recipients, subject, html, options = {}) => {
     });
   } else {
     debug('>>> mailer not configured');
-    debugLib('text')(options.text);
-    debugLib('html')(html);
+    debugText(options.text);
+    debugHtml(html);
     return Promise.resolve();
   }
 };

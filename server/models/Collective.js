@@ -863,7 +863,7 @@ export default function(Sequelize, DataTypes) {
   // this Payment Method will be used for "Add Funds"
   Collective.prototype.becomeHost = async function() {
     if (this.type !== 'USER' && this.type !== 'ORGANIZATION') {
-      throw new Error('Only USER or ORGANIZATION can become Host.');
+      return;
     }
 
     if (!this.isHostAccount) {
@@ -905,13 +905,7 @@ export default function(Sequelize, DataTypes) {
    * It does **not** check that the collective is indeed a host.
    */
   Collective.prototype.canApply = async function() {
-    const canApplySetting = Boolean(this.settings && this.settings.apply);
-    if (!canApplySetting) {
-      return false;
-    }
-
-    const hostPlan = await this.getPlan();
-    return !hostPlan.hostedCollectivesLimit || hostPlan.hostedCollectivesLimit > hostPlan.hostedCollectives;
+    return Boolean(this.settings && this.settings.apply);
   };
 
   /**
@@ -1513,9 +1507,11 @@ export default function(Sequelize, DataTypes) {
       throw new Error(`This collective already has a host (HostCollectiveId: ${this.HostCollectiveId})`);
     }
 
-    const hostPlan = await hostCollective.getPlan();
-    if (hostPlan.hostedCollectivesLimit && hostPlan.hostedCollectives >= hostPlan.hostedCollectivesLimit) {
-      throw new Error('Host is already hosting the maximum amount of collectives its plan allows');
+    if (this.type === types.COLLECTIVE) {
+      const hostPlan = await hostCollective.getPlan();
+      if (hostPlan.hostedCollectivesLimit && hostPlan.hostedCollectives >= hostPlan.hostedCollectivesLimit) {
+        throw new Error('Host is already hosting the maximum amount of collectives its plan allows');
+      }
     }
 
     const member = {

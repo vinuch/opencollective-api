@@ -12,6 +12,9 @@ import { sortResults, createDataLoaderWithOptions } from './helpers';
 // Loaders generators
 import generateCommentsLoader from './comments';
 import generateConversationLoaders from './conversation';
+import { generateExpenseAttachmentsLoader } from './expenses';
+import { generateCollectivePaypalPayoutMethodsLoader, generateCollectivePayoutMethodsLoader } from './payout-method';
+import { generateCanSeeUserPrivateInfoLoader } from './user';
 
 export const loaders = req => {
   const cache = {};
@@ -19,6 +22,10 @@ export const loaders = req => {
 
   context.loaders.Comment = generateCommentsLoader(req, cache);
   context.loaders.Conversation = generateConversationLoaders(req, cache);
+  context.loaders.ExpenseAttachment.byExpenseId = generateExpenseAttachmentsLoader(req, cache);
+  context.loaders.PayoutMethod.paypalByCollectiveId = generateCollectivePaypalPayoutMethodsLoader(req, cache);
+  context.loaders.PayoutMethod.byCollectiveId = generateCollectivePayoutMethodsLoader(req, cache);
+  context.loaders.User.canSeeUserPrivateInfo = generateCanSeeUserPrivateInfoLoader(req, cache);
 
   /** *** Collective *****/
 
