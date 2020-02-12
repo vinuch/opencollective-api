@@ -16,6 +16,8 @@ import { CollectiveInterfaceType, UserCollectiveType } from './CollectiveInterfa
 import { SubscriptionType, OrderType, PaymentMethodType, UserType, DateString, ExpenseType } from './types';
 import { canViewExpensePrivateInfo, getExpenseAttachments } from '../common/expenses';
 
+import { idEncode } from '../v2/identifiers';
+
 export const TransactionInterfaceType = new GraphQLInterfaceType({
   name: 'Transaction',
   description: 'Transaction interface',
@@ -32,6 +34,7 @@ export const TransactionInterfaceType = new GraphQLInterfaceType({
   fields: () => {
     return {
       id: { type: GraphQLInt },
+      idV2: { type: GraphQLString },
       uuid: { type: GraphQLString },
       amount: { type: GraphQLInt },
       currency: { type: GraphQLString },
@@ -63,6 +66,12 @@ const TransactionFields = () => {
       type: GraphQLInt,
       resolve(transaction) {
         return transaction.id;
+      },
+    },
+    idV2: {
+      type: GraphQLString,
+      resolve(transaction) {
+        return idEncode(transaction.id, 'transaction');
       },
     },
     refundTransaction: {
@@ -319,7 +328,7 @@ export const TransactionExpenseType = new GraphQLObjectType({
           if (!transaction.ExpenseId) {
             return null;
           } else {
-            const expense = req.loaders.Expense.byId(transaction.ExpenseId);
+            const expense = req.loaders.Expense.byId.load(transaction.ExpenseId);
             if (!expense || !(await canViewExpensePrivateInfo(expense, req))) {
               return null;
             } else {
