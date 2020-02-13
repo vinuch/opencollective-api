@@ -276,3 +276,70 @@ export const fakeTier = async (tierData = {}) => {
     ...tierData,
   });
 };
+
+/**
+ * Creates a fake order. All params are optionals.
+ */
+export const fakeOrder = async (orderData = {}) => {
+  const CreatedByUserId = orderData.CreatedByUserId || (await fakeUser()).id;
+  const user = await models.User.findByPk(CreatedByUserId);
+  const FromCollectiveId = orderData.FromCollectiveId || (await models.Collective.findByPk(user.CollectiveId)).id;
+  const CollectiveId = orderData.CollectiveId || (await fakeCollective()).id;
+  const collective = await models.Collective.findByPk(CollectiveId);
+
+  const order = await models.Order.create({
+    quantity: 1,
+    currency: collective.currency,
+    totalAmount: randAmount(100, 99999999),
+    ...orderData,
+    CreatedByUserId,
+    FromCollectiveId,
+    CollectiveId,
+  });
+
+  if (order.PaymentMethodId) {
+    order.paymentMethod = await models.PaymentMethod.findByPk(order.PaymentMethodId);
+  }
+
+  order.fromCollective = await models.Collective.findByPk(order.FromCollectiveId);
+  order.collective = collective;
+  order.createdByUser = user;
+  return order;
+};
+
+/**
+ * Creates a fake connectedAccount. All params are optionals.
+ */
+export const fakeConnectedAccount = async (connectedAccountData = {}) => {
+  const CollectiveId = connectedAccountData.CollectiveId || (await fakeCollective()).id;
+  const service = sample(['github', 'twitter', 'stripe', 'transferwise']);
+
+  return models.ConnectedAccount.create({
+    service,
+    ...connectedAccountData,
+    CollectiveId,
+  });
+};
+
+/**
+ * Creates a fake transaction. All params are optionals.
+ */
+export const fakeTransaction = async (transactionData = {}) => {
+  const amount = transactionData.amount || randAmount(10, 100) * 100;
+  const CreatedByUserId = transactionData.CreatedByUserId || (await fakeUser()).id;
+  const FromCollectiveId = transactionData.FromCollectiveId || (await fakeCollective()).id;
+  const CollectiveId = transactionData.CollectiveId || (await fakeCollective()).id;
+  return models.Transaction.create({
+    type: amount < 0 ? 'DEBIT' : 'CREDIT',
+    currency: 'USD',
+    hostCurrency: 'USD',
+    hostCurrencyFxRate: 1,
+    netAmountInCollectiveCurrency: amount,
+    amountInHostCurrency: amount,
+    ...transactionData,
+    amount,
+    CreatedByUserId,
+    FromCollectiveId,
+    CollectiveId,
+  });
+};

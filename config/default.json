@@ -60,11 +60,7 @@
     "from": "Open Collective <info@opencollective.com>"
   },
   "cache": {
-    "middleware": false,
-    "homepage": {
-      "disabled": false,
-      "refreshInterval": 3600
-    }
+    "middleware": false
   },
   "log": {
     "level": "info",
@@ -134,5 +130,8 @@
   },
   "githubFlow": {
     "minNbStars": 100
+  },
+  "transferwise": {
+    "api": "https://api.sandbox.transferwise.tech"
   }
 }
