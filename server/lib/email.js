@@ -46,10 +46,6 @@ const render = (template, data) => {
   }
   const html = juice(he.decode(templates[template](data)));
 
-  // When in development mode, we log the data used to compile the template
-  // (useful to get login token without sending an email)
-  debugLib('data')(`Rendering ${template} with data`, data);
-
   return { text, html };
 };
 
@@ -185,8 +181,6 @@ const sendMessage = (recipients, subject, html, options = {}) => {
     });
   } else {
     debug('>>> mailer not configured');
-    debugLib('text')(options.text);
-    debugLib('html')(html);
     return Promise.resolve();
   }
 };

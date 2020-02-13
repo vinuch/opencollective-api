@@ -3,7 +3,6 @@ import config from 'config';
 import connectRedis from 'connect-redis';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import debug from 'debug';
 import errorHandler from 'errorhandler';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -31,22 +30,6 @@ export default function(app) {
   // Loaders are attached to the request to batch DB queries per request
   // It also creates in-memory caching (based on request auth);
   app.use(loadersMiddleware);
-
-  if (process.env.DEBUG && process.env.DEBUG.match(/response/)) {
-    app.use((req, res, next) => {
-      const temp = res.end;
-      res.end = function(str) {
-        try {
-          const obj = JSON.parse(str);
-          debug('response')(JSON.stringify(obj, null, '  '));
-        } catch (e) {
-          debug('response', str);
-        }
-        temp.apply(this, arguments);
-      };
-      next();
-    });
-  }
 
   // Log requests if enabled (default false)
   if (get(config, 'log.accessLogs')) {
