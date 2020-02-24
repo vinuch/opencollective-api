@@ -442,7 +442,7 @@ export const ExpenseAttachmentInputType = new GraphQLInputObjectType({
   description: 'Fields for creating or editing an expense attachment',
   fields: {
     id: { type: GraphQLInt },
-    url: { type: new GraphQLNonNull(DateString) },
+    url: { type: GraphQLString },
     amount: { type: new GraphQLNonNull(GraphQLInt) },
     incurredAt: { type: DateString },
     description: { type: GraphQLString },
@@ -483,6 +483,7 @@ export const ExpenseInputType = new GraphQLInputObjectType({
         deprecationReason: '2020-21-01: Please use PayoutMethod',
       },
       PayoutMethod: {
+        id: { type: GraphQLInt },
         type: PayoutMethodInputType,
       },
       privateMessage: { type: GraphQLString },
