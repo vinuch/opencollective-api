@@ -221,6 +221,10 @@ export async function createExpense(remoteUser, expenseData) {
     throw new errors.ValidationFailed('Expenses can only be submitted to collectives and events');
   }
 
+  if ([expenseType.INVOICE, expenseType.RECEIPT].includes(expense.type)) {
+    throw new errors.ValidationFailed('Expense type must be INVOICE or RECEIPT');
+  }
+
   // For now we only add expenses from user's collectives
   const fromCollective = await remoteUser.getCollective();
 
